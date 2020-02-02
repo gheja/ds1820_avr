@@ -12,6 +12,7 @@ static const uint8_t kReadScatchPad = 0xBE;
 // Scratch pad data indexes
 static const uint8_t kScratchPad_tempLSB = 0;
 static const uint8_t kScratchPad_tempMSB = 1;
+static const uint8_t kScratchPad_tempCountRemain = 6;
 static const uint8_t kScratchPad_crc = 8;
 
 static uint16_t ds18b20_readScratchPad(const gpin_t* io)
@@ -31,6 +32,38 @@ static uint16_t ds18b20_readScratchPad(const gpin_t* io)
 	
 	// Return the raw 9 to 12-bit temperature value
 	return (buffer[kScratchPad_tempMSB] << 8) | buffer[kScratchPad_tempLSB];
+}
+
+static uint16_t ds18b20_readScratchPad2(const gpin_t* io, uint8_t* address)
+{
+	// Read scratchpad into buffer (LSB byte first)
+	static const int8_t kScratchPadLength = 9;
+	uint8_t buffer[kScratchPadLength];
+	
+	for (int8_t i = 0; i < kScratchPadLength; ++i) {
+		buffer[i] = onewire_read(io);
+	}
+	
+	// Check the CRC (9th byte) against the 8 bytes of data
+	if (crc8(buffer, 8) != buffer[kScratchPad_crc]) {
+		return kDS18B20_CrcCheckFailed;
+	}
+	
+	// DS1820, DS18S20
+	if (address[0] == 0x10)
+	{
+		// temp_read - 0.25 + (count_per_c - count_remain) / count_per_c
+		// count_per_c is always 16 (0x10)
+		
+		// Return the raw 9 to 12-bit temperature value
+		return ((buffer[kScratchPad_tempLSB] >> 1) << 4) - 16 +
+			(16 - (buffer[kScratchPad_tempCountRemain]));
+	}
+	else
+	{
+		// Return the raw 9 to 12-bit temperature value
+		return (buffer[kScratchPad_tempMSB] << 8) | buffer[kScratchPad_tempLSB];
+	}
 }
 
 uint16_t ds18b20_read_single(const gpin_t* io)
@@ -59,7 +92,7 @@ uint16_t ds18b20_read_slave(const gpin_t* io, uint8_t* address)
 	onewire_write(io, kReadScatchPad);
 	
 	// Read the data from the scratch pad
-	return ds18b20_readScratchPad(io);
+	return ds18b20_readScratchPad2(io, address);
 }
 
 uint16_t ds18b20_convert(const gpin_t* io)
