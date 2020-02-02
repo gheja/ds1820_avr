@@ -62,7 +62,7 @@ uint16_t ds18b20_read_slave(const gpin_t* io, uint8_t* address)
 	return ds18b20_readScratchPad(io);
 }
 
-void ds18b20_convert(const gpin_t* io)
+uint16_t ds18b20_convert(const gpin_t* io)
 {
 	// Confirm the device is still alive. Abort if no reply
 	if (!onewire_reset(io)) {
@@ -72,9 +72,11 @@ void ds18b20_convert(const gpin_t* io)
 	// Send convert command to all devices (this has no response)
 	onewire_skiprom(io);
 	onewire_write(io, kConvertCommand);
+	
+	return 0;
 }
 
-void ds18b20_convert_slave(const gpin_t* io, uint8_t* address)
+uint16_t ds18b20_convert_slave(const gpin_t* io, uint8_t* address)
 {
 	// Confirm the device is still alive. Abort if no reply
 	if (!onewire_reset(io)) {
@@ -84,4 +86,6 @@ void ds18b20_convert_slave(const gpin_t* io, uint8_t* address)
 	// Send convert command to the specified device (this has no response)
 	onewire_match_rom(io, address);
 	onewire_write(io, kConvertCommand);
+	
+	return 0;
 }
