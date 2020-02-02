@@ -73,3 +73,15 @@ void ds18b20_convert(const gpin_t* io)
 	onewire_skiprom(io);
 	onewire_write(io, kConvertCommand);
 }
+
+void ds18b20_convert_slave(const gpin_t* io, uint8_t* address)
+{
+	// Confirm the device is still alive. Abort if no reply
+	if (!onewire_reset(io)) {
+		return kDS18B20_DeviceNotFound;
+	}
+	
+	// Send convert command to the specified device (this has no response)
+	onewire_match_rom(io, address);
+	onewire_write(io, kConvertCommand);
+}
