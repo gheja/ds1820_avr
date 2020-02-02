@@ -13,7 +13,13 @@ static const uint16_t kDS18B20_CrcCheckFailed = 0x5000;
  * Trigger all devices on the bus to perform a temperature reading
  * This returns immedidately, but callers must wait for conversion on slaves (max 750ms)
  */
-void ds18b20_convert(const gpin_t* io);
+uint16_t ds18b20_convert(const gpin_t* io);
+
+/**
+ * Trigger a specific device on the bus to perform a temperature reading
+ * This returns immedidately, but callers must wait for conversion on slaves (max 750ms)
+ */
+uint16_t ds18b20_convert_slave(const gpin_t* io, uint8_t* address);
 
 /**
  * Read the last temperature conversion from the only probe on the bus
