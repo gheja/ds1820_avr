@@ -64,6 +64,11 @@ uint16_t ds18b20_read_slave(const gpin_t* io, uint8_t* address)
 
 void ds18b20_convert(const gpin_t* io)
 {
+	// Confirm the device is still alive. Abort if no reply
+	if (!onewire_reset(io)) {
+		return kDS18B20_DeviceNotFound;
+	}
+	
 	// Send convert command to all devices (this has no response)
 	onewire_skiprom(io);
 	onewire_write(io, kConvertCommand);
